@@ -12,6 +12,10 @@ class Settings:
     # Model save folder
     model_save_path = "models/"
     
+    backbone = 'resnet50'  # or 'kimia' for custom model
+    embed_dim = 1024 # Dimension of the final embedding vector and the imput to attention
+    pretrained = True  # Use pretrained weights for backbone if available
+    gated = True  # Use gated attention
     
     # Training parameters
     batch_size = 32
