@@ -7,3 +7,11 @@ __pycache__/
 # models checkpoints and data
 models/
 data/
+
+# external repositories
+external/
+
+# input and results
+patch_images/
+M-6.ndpi
+extracted_features/KimiaNet_NDPI_Features.pickle
