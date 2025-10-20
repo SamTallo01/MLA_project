@@ -7,3 +7,4 @@ __pycache__/
 # models checkpoints and data
 models/
 data/
+data_segmented/
