@@ -9,8 +9,11 @@ from wsi_core.wsi_utils import create_overlay
 
 
 def patch(args):
-    wsi_paths = [os.path.join(args.wsi, f) for f in os.listdir(args.wsi)
-                 if f.lower().endswith((".svs", ".tif", ".tiff", ".ndpi"))]
+    wsi_paths = [
+        os.path.join(args.wsi, f)
+        for f in os.listdir(args.wsi)
+        if f.lower().endswith((".svs", ".tif", ".tiff", ".ndpi"))
+    ]
 
     print(f"\n--- Found {len(wsi_paths)} WSI files ---\n")
     overlay_dir = os.path.join(args.out_dir, "overlays")
@@ -25,7 +28,9 @@ def patch(args):
         overlay_path = os.path.join(overlay_dir, f"{wsi_name}_overlay.png")
 
         if os.path.exists(h5_path):
-            print(f"{bcolors.WARNING}[SKIP] {wsi_name} already has HDF5 → {h5_path}{bcolors.ENDC}")
+            print(
+                f"{bcolors.WARNING}[SKIP] {wsi_name} already has HDF5 → {h5_path}{bcolors.ENDC}"
+            )
             continue
 
         print(f"\n{bcolors.OKCYAN}Processing {wsi_path}{bcolors.ENDC}")
@@ -38,7 +43,7 @@ def patch(args):
             morph_disk_um=args.morph_disk_um,
             remove_small_um=args.remove_small_um,
             debug=args.debug,
-            skip_laplacian_csv=args.skip_laplacian_csv
+            skip_laplacian_csv=args.skip_laplacian_csv,
         )
 
         mask = wsi.mask_small
@@ -52,7 +57,9 @@ def patch(args):
 
         for y_ds in range(0, h - patch_size_ds + 1, stride_ds):
             for x_ds in range(0, w - patch_size_ds + 1, stride_ds):
-                patch_mask = mask[y_ds:y_ds + patch_size_ds, x_ds:x_ds + patch_size_ds]
+                patch_mask = mask[
+                    y_ds : y_ds + patch_size_ds, x_ds : x_ds + patch_size_ds
+                ]
                 if patch_mask.mean() < args.min_tissue_frac:
                     continue
                 x = x_ds * ds
@@ -63,7 +70,9 @@ def patch(args):
 
         with h5py.File(h5_path, "w") as f:
             f.create_dataset("coords", data=coords)
-        print(f"{bcolors.OKGREEN}Saved patch coordinates to {h5_path} ({len(coords)} patches){bcolors.ENDC}")
+        print(
+            f"{bcolors.OKGREEN}Saved patch coordinates to {h5_path} ({len(coords)} patches){bcolors.ENDC}"
+        )
 
         create_overlay(
             wsi_input=wsi_path,
@@ -71,7 +80,7 @@ def patch(args):
             output_path=overlay_path,
             downsample_factor=32,
             patch_size=args.patch_size,
-            alpha=0.4
+            alpha=0.4,
         )
 
 

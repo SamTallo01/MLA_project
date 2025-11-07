@@ -28,18 +28,21 @@ class WholeSlideImage:
         morph_disk_um=50,
         remove_small_um=100_000,
         debug=False,
-        skip_laplacian_csv=None
+        skip_laplacian_csv=None,
     ):
 
         force_second_attempt = False
         if skip_laplacian_csv and os.path.exists(skip_laplacian_csv):
             import csv
+
             with open(skip_laplacian_csv, newline="") as f:
                 reader = csv.reader(f)
                 slide_names = [row[0] for row in reader]
             if self.name in slide_names:
                 force_second_attempt = True
-                print(f"{self.name} is in skip_laplacian CSV → using attempt 1 logic directly")
+                print(
+                    f"{self.name} is in skip_laplacian CSV → using attempt 1 logic directly"
+                )
 
         def _save_debug(array, filename):
             debug_dir = os.path.join("debug", self.name)
@@ -108,15 +111,24 @@ class WholeSlideImage:
                 _save_debug(bw_closed, f"4_closed_attempt{attempt}.png")
 
             area_thresh_px = remove_small_um * (pixels_per_um**2)
-            bw_clean = morphology.remove_small_objects(bw_closed, min_size=area_thresh_px)
-            bw_clean = morphology.remove_small_holes(bw_clean, area_threshold=area_thresh_px)
+            bw_clean = morphology.remove_small_objects(
+                bw_closed, min_size=area_thresh_px
+            )
+            bw_clean = morphology.remove_small_holes(
+                bw_clean, area_threshold=area_thresh_px
+            )
             if debug:
                 _save_debug(bw_clean, f"5_clean_attempt{attempt}.png")
 
             tissue_percent = bw_clean.mean()
             print(f"Tissue percentage = {tissue_percent:.2%}")
 
-            if attempt == 0 and not force_second_attempt and laplacian and (tissue_percent < 0.08 or tissue_percent > 0.70):
+            if (
+                attempt == 0
+                and not force_second_attempt
+                and laplacian
+                and (tissue_percent < 0.08 or tissue_percent > 0.70)
+            ):
                 print("Bad segmentation → retrying without Laplacian")
                 continue
 
@@ -124,6 +136,8 @@ class WholeSlideImage:
 
         self.mask_small = bw_clean.astype(np.uint8)
         self.mask_downsample = downsample_factor
-        print(f"Finished Tissue Mask: shape={self.mask_small.shape}, downsample={self.mask_downsample}")
+        print(
+            f"Finished Tissue Mask: shape={self.mask_small.shape}, downsample={self.mask_downsample}"
+        )
 
         return self.mask_small

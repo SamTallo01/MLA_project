@@ -3,13 +3,9 @@ import h5py
 from PIL import Image, ImageDraw
 import openslide
 
+
 def create_overlay(
-    wsi_input,
-    h5_file,
-    output_path,
-    downsample_factor=32,
-    patch_size=512,
-    alpha=0.4 
+    wsi_input, h5_file, output_path, downsample_factor=32, patch_size=512, alpha=0.4
 ):
 
     if not os.path.exists(wsi_input):
@@ -45,8 +41,8 @@ def create_overlay(
         y_ds = y // downsample_factor
         draw.rectangle(
             [x_ds, y_ds, x_ds + patch_ds, y_ds + patch_ds],
-            outline=None, 
-            fill=fill_color
+            outline=None,
+            fill=fill_color,
         )
 
     result = Image.alpha_composite(thumbnail, overlay)
