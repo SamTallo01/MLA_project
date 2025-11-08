@@ -17,3 +17,4 @@ M-6.ndpi
 extracted_features/KimiaNet_NDPI_Features.pickle
 patches/
 debug/
+features/
