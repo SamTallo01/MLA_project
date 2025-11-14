@@ -17,7 +17,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # Path to NDPI file and saved KimiaNet weights
 ndpi_path = 'M-6.ndpi'
-kimianet_weights_path = 'KimiaNet_Weights/weights/KimiaNetPyTorchWeights.pth'
+kimianet_weights_path = 'model/KimiaNet_Weights/weights/KimiaNetPyTorchWeights.pth'
 save_features_path = './extracted_features/'
 
 os.makedirs(save_features_path, exist_ok=True)

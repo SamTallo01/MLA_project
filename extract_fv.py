@@ -10,8 +10,19 @@ from wsi_core.utils import bcolors
 PATCH_SIZE = 512
 
 def get_resnet_feature_extractor(device="cuda"):
-    from models.resnet import get_feature_extractor
+    from feature_extractor.models.resnet import get_feature_extractor
     model = get_feature_extractor(device=device)
+    return model, transforms.Compose([
+        transforms.Resize((224, 224)),
+        transforms.ToTensor(),
+        transforms.Normalize([0.485,0.456,0.406], [0.229,0.224,0.225])
+    ])
+    
+def get_kimianet_feature_extractor(device="cuda"):
+    from feature_extractor.models.kimianet import get_feature_extractor
+    
+    model = get_feature_extractor(device=device)
+    
     return model, transforms.Compose([
         transforms.Resize((224, 224)),
         transforms.ToTensor(),
@@ -49,7 +60,7 @@ def save_features(coords, features, output_h5_path):
     torch.save(features, pt_path)
     print(f"{bcolors.OKGREEN}Saved PyTorch tensor → {pt_path}{bcolors.ENDC}")
 
-def main(wsi_dir, patches_dir, output_dir, batch_size=512, device="cuda", feature_extractor_fn=get_resnet_feature_extractor):
+def main(wsi_dir, patches_dir, output_dir, batch_size=512, device="cuda", feature_extractor_fn=get_kimianet_feature_extractor):
     os.makedirs(output_dir, exist_ok=True)
 
     slides = {os.path.splitext(f)[0]: os.path.join(wsi_dir, f)
