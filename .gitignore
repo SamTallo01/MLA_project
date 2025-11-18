@@ -5,7 +5,6 @@
 __pycache__/
 
 # models checkpoints and data
-models/
 data/
 dataset/
 dataset_sample/
