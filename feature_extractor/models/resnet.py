@@ -4,7 +4,7 @@ import torchvision.models as models
 from torchvision import transforms
 
 # Output feature vector dimension for ResNet50 after AdaptiveAvgPool is 2048
-OUTPUT_DIM = 2048
+OUTPUT_DIM = 1024
 
 def get_feature_extractor(device="cuda"):
     """
