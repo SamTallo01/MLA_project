@@ -20,9 +20,7 @@ def get_resnet_feature_extractor(device="cuda"):
     
 def get_kimianet_feature_extractor(device="cuda"):
     from feature_extractor.models.kimianet import get_feature_extractor
-    
     model = get_feature_extractor(device=device)
-    
     return model, transforms.Compose([
         transforms.Resize((224, 224)),
         transforms.ToTensor(),
@@ -60,8 +58,17 @@ def save_features(coords, features, output_h5_path):
     torch.save(features, pt_path)
     print(f"{bcolors.OKGREEN}Saved PyTorch tensor → {pt_path}{bcolors.ENDC}")
 
-def main(wsi_dir, patches_dir, output_dir, batch_size=512, device="cuda", feature_extractor_fn=get_kimianet_feature_extractor):
+def main(wsi_dir, patches_dir, output_dir, batch_size=512, device="cuda", model_name="kimianet"):
     os.makedirs(output_dir, exist_ok=True)
+
+    if model_name.lower() == "kimianet":
+        feature_extractor_fn = get_kimianet_feature_extractor
+        print(f"{bcolors.OKBLUE}Using KimiaNet extractor{bcolors.ENDC}")
+    elif model_name.lower() == "resnet":
+        feature_extractor_fn = get_resnet_feature_extractor
+        print(f"{bcolors.OKBLUE}Using ResNet extractor{bcolors.ENDC}")
+    else:
+        raise ValueError("Invalid --model option. Choose: resnet, kimianet")
 
     slides = {os.path.splitext(f)[0]: os.path.join(wsi_dir, f)
               for f in os.listdir(wsi_dir)
@@ -100,7 +107,11 @@ if __name__ == "__main__":
     parser.add_argument("--wsi_dir", required=True)
     parser.add_argument("--patches_dir", required=True)
     parser.add_argument("--output_dir", required=True)
-    parser.add_argument("--batch_size", type=int, default=512)
+    parser.add_argument("--batch_size", type=int, default=32)
+    parser.add_argument("--model", type=str, default="kimianet",
+                        choices=["kimianet", "resnet"],
+                        help="Select feature extractor backend")
     args = parser.parse_args()
 
-    main(args.wsi_dir, args.patches_dir, args.output_dir, args.batch_size)
+    main(args.wsi_dir, args.patches_dir, args.output_dir,
+         args.batch_size, model_name=args.model)
