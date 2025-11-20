@@ -2,6 +2,9 @@ import torch.nn as nn
 from torchvision import models
 
 
+OUTPUT_DIM = 1024 
+
+
 class ResNetFeatureExtractor(nn.Module):
     def __init__(self):
         super().__init__()
@@ -18,7 +21,7 @@ class ResNetFeatureExtractor(nn.Module):
 
         # Linear projection layer:
         # Maps ResNet's 2048-dimensional output to a 1024-dimensional feature vector
-        self.project = nn.Linear(2048, 1024)
+        self.project = nn.Linear(2048, OUTPUT_DIM)
 
     def forward(self, x):
         # Pass input through all ResNet convolutional layers
