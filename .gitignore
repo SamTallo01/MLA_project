@@ -16,6 +16,10 @@ external/
 patch_images/
 M-6.ndpi
 extracted_features/
+kimianet_features/
+resnet_features/
+uni_features/
 patches/
 debug/
 features/
+checkpoints/
