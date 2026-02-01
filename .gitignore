@@ -23,3 +23,7 @@ patches/
 debug/
 features/
 checkpoints/
+manual_patch_level/
+manual_cell_level/
+manual_patch_level_filtered/
+geojson_patches/
