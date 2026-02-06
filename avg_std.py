@@ -71,7 +71,7 @@ print(f"Feature selezionate: {len(base_features)}")
 print(f"Totale colonne output: {len(base_features) * 2 + 1} (mean + std + Patch)\n")
 
 # --- CARTELLE ---
-input_folder = "manual_cell_level"
+input_folder = "manual_cell_level/SARC"
 output_folder = "manual_patch_level"
 os.makedirs(output_folder, exist_ok=True)
 

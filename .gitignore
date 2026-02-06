@@ -27,3 +27,9 @@ manual_patch_level/
 manual_cell_level/
 manual_patch_level_filtered/
 geojson_patches/
+resnet_features_MLA/
+MLA_features_resnet50_merged/
+out/
+MLA_features_resnet50/
+MLA_features_uni/
+MLA_features_kimianet/
