@@ -27,6 +27,15 @@ def get_kimianet_feature_extractor(device="cuda"):
         transforms.Normalize([0.485,0.456,0.406], [0.229,0.224,0.225])
     ])
 
+def get_resnet18_feature_extractor(device="cuda"):
+    from feature_extractor.models.resnet18 import get_feature_extractor
+    model = get_feature_extractor(device=device)
+    return model, transforms.Compose([
+        transforms.Resize((224, 224)),
+        transforms.ToTensor(),
+        transforms.Normalize([0.485,0.456,0.406], [0.229,0.224,0.225])
+    ])
+
 def extract_features(slide_path, coords, model, transform, device="cuda", batch_size=512):
     slide = openslide.OpenSlide(slide_path)
     features = []
@@ -67,12 +76,15 @@ def main(wsi_dir, patches_dir, output_dir, batch_size=512, device="cuda", model_
     elif model_name.lower() == "resnet":
         feature_extractor_fn = get_resnet_feature_extractor
         print(f"{bcolors.OKBLUE}Using ResNet extractor{bcolors.ENDC}")
+    elif model_name.lower() == "resnet18":
+        feature_extractor_fn = get_resnet18_feature_extractor
+        print(f"{bcolors.OKBLUE}Using ResNet18 extractor{bcolors.ENDC}")
     else:
-        raise ValueError("Invalid --model option. Choose: resnet, kimianet")
+        raise ValueError("Invalid --model option. Choose: resnet, resnet18, kimianet")
 
     slides = {os.path.splitext(f)[0]: os.path.join(wsi_dir, f)
-              for f in os.listdir(wsi_dir)
-              if f.lower().endswith((".svs", ".tif", ".tiff", ".ndpi"))}
+            for f in os.listdir(wsi_dir)
+            if f.lower().endswith((".svs", ".tif", ".tiff", ".ndpi"))}
 
     coords_dict = {}
     for folder in os.listdir(patches_dir):
@@ -109,9 +121,9 @@ if __name__ == "__main__":
     parser.add_argument("--output_dir", required=True)
     parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument("--model", type=str, default="kimianet",
-                        choices=["kimianet", "resnet"],
+                        choices=["kimianet", "resnet", "resnet18"],
                         help="Select feature extractor backend")
     args = parser.parse_args()
 
     main(args.wsi_dir, args.patches_dir, args.output_dir,
-         args.batch_size, model_name=args.model)
+        args.batch_size, model_name=args.model)

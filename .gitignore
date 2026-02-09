@@ -18,6 +18,7 @@ M-6.ndpi
 extracted_features/
 kimianet_features/
 resnet_features/
+resnet18_features/
 uni_features/
 patches/
 debug/
