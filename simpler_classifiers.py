@@ -17,21 +17,21 @@ warnings.filterwarnings('ignore')
 
 
 class FeatureLoader:
-    """Carica features da file .h5 in modo flessibile"""
+    """Loads features from .h5 files flexibly"""
     
     def __init__(self, features_dir: str, feature_key: str = 'features'):
         """
         Args:
-            features_dir: Directory contenente i file .h5
-            feature_key: Chiave dentro il file h5 (es: 'features', 'feats', ecc.)
+            features_dir: Directory containing .h5 files
+            feature_key: Key inside h5 file (e.g.: 'features', 'feats', etc.)
         """
         self.features_dir = Path(features_dir)
         self.feature_key = feature_key
         self.feature_dim = None
         
     def load_single_slide(self, slide_id: str) -> np.ndarray:
-        """Carica features per una singola slide"""
-        # Prova diverse estensioni comuni
+        """Load features for a single slide"""
+        # Try different common extensions
         possible_paths = [
             self.features_dir / f"{slide_id}.h5",
             self.features_dir / f"{slide_id}.hdf5",
@@ -41,7 +41,7 @@ class FeatureLoader:
         for h5_path in possible_paths:
             if h5_path.exists():
                 with h5py.File(h5_path, 'r') as f:
-                    # Prova diverse chiavi comuni
+                    # Try different common keys
                     for key in [self.feature_key, 'features', 'feats', 'data']:
                         if key in f:
                             features = f[key][:]
@@ -53,14 +53,14 @@ class FeatureLoader:
                             
                             return features
                     
-                    # Se non trova la chiave, stampa quelle disponibili
+                    # If key not found, print available ones
                     print(f"Available keys in {h5_path.name}: {list(f.keys())}")
                     raise KeyError(f"Key '{self.feature_key}' not found")
         
         raise FileNotFoundError(f"No .h5 file found for slide {slide_id}")
     
     def load_all_slides(self, slide_ids: List[str]) -> Dict[str, np.ndarray]:
-        """Carica features per tutte le slides"""
+        """Load features for all slides"""
         features_dict = {}
         
         print(f"Loading features from: {self.features_dir}")
@@ -89,7 +89,7 @@ class FeatureLoader:
 
 
 class BinaryConverter:
-    """Converte labels da 3 classi a 2 classi"""
+    """Converts labels from 3 classes to 2 classes"""
     
     STRATEGIES = {
         'class_0_vs_rest': 'Class 0 vs Rest (1+2)',
@@ -105,14 +105,14 @@ class BinaryConverter:
     @staticmethod
     def convert(df: pd.DataFrame, strategy: str) -> Tuple[pd.DataFrame, str]:
         """
-        Converte dataframe a problema binario
+        Converts dataframe to binary problem
         
         Args:
-            df: DataFrame con colonna 'label' (0, 1, 2)
-            strategy: Strategia di conversione
+            df: DataFrame with 'label' column (0, 1, 2)
+            strategy: Conversion strategy
             
         Returns:
-            (df_binary, description): DataFrame modificato e descrizione
+            (df_binary, description): Modified DataFrame and description
         """
         df_copy = df.copy()
         
@@ -162,7 +162,7 @@ class BinaryConverter:
 
 
 class FeatureAggregator:
-    """Aggrega features delle patches in rappresentazioni slide-level"""
+    """Aggregates patch features into slide-level representations"""
     
     METHODS = ['mean', 'max', 'std', 'mean+max', 'mean+std', 'mean+max+std', 
                'percentile', 'top_k', 'attention_pool']
@@ -170,12 +170,12 @@ class FeatureAggregator:
     @staticmethod
     def aggregate(features: np.ndarray, method: str = 'mean', k: int = 10) -> np.ndarray:
         """
-        Aggrega features di patches in un singolo vettore
+        Aggregates patch features into a single vector
         
         Args:
             features: Array [N_patches, feature_dim]
-            method: Metodo di aggregazione
-            k: Numero di top patches per 'top_k'
+            method: Aggregation method
+            k: Number of top patches for 'top_k'
         
         Returns:
             Array [aggregated_feature_dim]
@@ -215,13 +215,13 @@ class FeatureAggregator:
             return np.concatenate([p25, p50, p75])
         
         elif method == 'top_k':
-            # Media delle top-k patches (basato su norma L2)
+            # Average of top-k patches (based on L2 norm)
             norms = np.linalg.norm(features, axis=1)
             top_indices = np.argsort(norms)[-k:]
             return np.mean(features[top_indices], axis=0)
         
         elif method == 'attention_pool':
-            # Simple attention: weighted mean basato su norma
+            # Simple attention: weighted mean based on norm
             norms = np.linalg.norm(features, axis=1)
             weights = np.exp(norms) / np.sum(np.exp(norms))
             return np.sum(features * weights[:, np.newaxis], axis=0)
@@ -231,14 +231,18 @@ class FeatureAggregator:
 
 
 class BaselineClassifierBenchmark:
-    """Benchmark di classificatori semplici per debugging"""
+    """Benchmark of simple classifiers for debugging"""
     
-    def __init__(self, normalize: bool = True, use_pca: Optional[float] = None, n_classes: int = 3):
+    def __init__(self, normalize: bool = True, use_pca: Optional[float] = None, 
+                 n_classes: int = 3, output_dir: str = 'baseline_results',
+                 features_dir_name: str = None):
         """
         Args:
-            normalize: Se True, applica StandardScaler
-            use_pca: Se specificato, riduce dimensionalità mantenendo questa % di varianza
-            n_classes: Numero di classi (2 o 3)
+            normalize: If True, applies StandardScaler
+            use_pca: If specified, reduces dimensionality maintaining this % of variance
+            n_classes: Number of classes (2 or 3)
+            output_dir: Base directory where to save results
+            features_dir_name: Name of features directory (will create subfolder)
         """
         self.normalize = normalize
         self.use_pca = use_pca
@@ -246,8 +250,18 @@ class BaselineClassifierBenchmark:
         self.scaler = None
         self.pca = None
         
+        # Create output directory with features subfolder
+        base_output = Path(output_dir)
+        if features_dir_name:
+            self.output_dir = base_output / features_dir_name
+        else:
+            self.output_dir = base_output
+            
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+        print(f"Output directory: {self.output_dir.absolute()}")
+        
     def get_classifiers(self):
-        """Ritorna dizionario di classificatori da testare"""
+        """Returns dictionary of classifiers to test"""
         return {
             'Logistic Regression': LogisticRegression(
                 max_iter=2000,
@@ -261,14 +275,7 @@ class BaselineClassifierBenchmark:
                 random_state=1,
                 probability=True
             ),
-            'RBF SVM (C=0.1)': SVC(
-                kernel='rbf',
-                C=0.1,
-                class_weight='balanced',
-                random_state=1,
-                probability=True
-            ),
-            'RBF SVM (C=1.0)': SVC(
+            'RBF SVM': SVC(
                 kernel='rbf',
                 C=1.0,
                 class_weight='balanced',
@@ -284,7 +291,7 @@ class BaselineClassifierBenchmark:
         }
     
     def preprocess(self, X_train: np.ndarray, X_test: np.ndarray = None) -> Tuple:
-        """Applica normalizzazione e PCA se richiesto"""
+        """Applies normalization and PCA if requested"""
         # Normalize
         if self.normalize:
             if self.scaler is None:
@@ -312,10 +319,10 @@ class BaselineClassifierBenchmark:
     
     def evaluate(self, X: np.ndarray, y: np.ndarray, n_splits: int = 3):
         """
-        Esegue cross-validation con tutti i classificatori
+        Executes cross-validation with all classifiers
         
         Returns:
-            Dictionary con risultati dettagliati
+            Dictionary with detailed results
         """
         print(f"\n{'='*70}")
         print(f"BASELINE CLASSIFIER BENCHMARK ({self.n_classes}-CLASS)")
@@ -333,7 +340,7 @@ class BaselineClassifierBenchmark:
         
         for clf_name, clf in classifiers.items():
             print(f"\n{'─'*70}")
-            print(f"📊 {clf_name}")
+            print(f"[Classifier] {clf_name}")
             print(f"{'─'*70}")
             
             fold_accs = []
@@ -398,11 +405,11 @@ class BaselineClassifierBenchmark:
             # Summary
             print(f"\n{'─'*40}")
             print(f"SUMMARY ({clf_name}):")
-            print(f"  Accuracy:         {np.mean(fold_accs):.3f} ± {np.std(fold_accs):.3f}")
-            print(f"  Balanced Acc:     {np.mean(fold_bal_accs):.3f} ± {np.std(fold_bal_accs):.3f}")
-            print(f"  AUC ({'binary' if self.n_classes == 2 else 'macro'}):      {np.nanmean(fold_aucs):.3f} ± {np.nanstd(fold_aucs):.3f}")
+            print(f"  Accuracy:         {np.mean(fold_accs):.3f} +/- {np.std(fold_accs):.3f}")
+            print(f"  Balanced Acc:     {np.mean(fold_bal_accs):.3f} +/- {np.std(fold_bal_accs):.3f}")
+            print(f"  AUC ({'binary' if self.n_classes == 2 else 'macro'}):      {np.nanmean(fold_aucs):.3f} +/- {np.nanstd(fold_aucs):.3f}")
             
-            # Confusion matrix aggregata
+            # Aggregated confusion matrix
             cm = confusion_matrix(all_y_true, all_y_pred)
             print(f"\nAggregated Confusion Matrix:")
             print(cm)
@@ -421,8 +428,8 @@ class BaselineClassifierBenchmark:
         
         return results
     
-    def plot_results(self, results: Dict, save_path: str = 'baseline_results.png'):
-        """Visualizza risultati del benchmark"""
+    def plot_results(self, results: Dict, save_name: str = 'baseline_results.png'):
+        """Visualizes benchmark results"""
         fig, axes = plt.subplots(1, 2, figsize=(14, 5))
         
         # Plot 1: Balanced Accuracy comparison
@@ -441,7 +448,7 @@ class BaselineClassifierBenchmark:
         axes[0].tick_params(axis='x', rotation=45)
         axes[0].grid(axis='y', alpha=0.3)
         
-        # Plot 2: Confusion matrix del miglior classificatore
+        # Plot 2: Confusion matrix of best classifier
         best_clf = max(results.items(), 
                        key=lambda x: np.mean(x[1]['balanced_accuracy']))[0]
         cm = results[best_clf]['confusion_matrix']
@@ -453,26 +460,27 @@ class BaselineClassifierBenchmark:
         axes[1].set_title(f'Best: {best_clf}', fontsize=14, fontweight='bold')
         
         plt.tight_layout()
+        
+        # Save in output directory
+        save_path = self.output_dir / save_name
         plt.savefig(save_path, dpi=150, bbox_inches='tight')
-        print(f"\n📈 Results saved to: {save_path}")
-        plt.show()
+        print(f"\n[SAVED] Results saved to: {save_path}")
+        plt.close()
 
 
-# ============================================================================
-# MAIN SCRIPT
-# ============================================================================
 
 def main():
     # ──────────────────────────────────────────────────────────────────────
-    # CONFIGURAZIONE - MODIFICA QUESTI PARAMETRI
+    # CONFIGURATION - MODIFY THESE PARAMETERS
     # ──────────────────────────────────────────────────────────────────────
     
-    FEATURES_DIR = "MLA_features_uni"  # ← CAMBIA QUESTO
-    CSV_PATH = "dataset.csv"            # ← CAMBIA QUESTO
-    FEATURE_KEY = "features"            # ← Chiave dentro .h5
+    FEATURES_DIR = "MLA_features_resnet50_merged"
+    CSV_PATH = "dataset.csv"
+    FEATURE_KEY = "features"  # Key inside .h5 file
+    OUTPUT_DIR = "baseline_results"  # Base output directory for all results
     
     # ============ BINARY vs MULTICLASS ============
-    # Opzioni:
+    # Options:
     # - None: 3-class problem (default)
     # - 'class_2_vs_rest': Sarcomatoid (2) vs Others (0+1)
     # - 'class_0_vs_rest': Epithelioid (0) vs Others (1+2)
@@ -480,11 +488,11 @@ def main():
     # - 'sarcomatoid_vs_rest': Same as class_2_vs_rest
     # - 'epithelioid_vs_non': Same as class_0_vs_rest
     
-    BINARY_STRATEGY = 'class_2_vs_rest'  # ← CAMBIA QUESTO per problema binario
+    BINARY_STRATEGY = None  # Change this for binary problem
     # BINARY_STRATEGY = 'class_2_vs_rest'  # Sarcomatoid vs Rest
     # ==============================================
     
-    # Aggregation method
+    # Aggregation methods
     AGGREGATION_METHODS = ['mean', 'max', 'mean+max']
     
     # Preprocessing
@@ -496,13 +504,13 @@ def main():
     
     # ──────────────────────────────────────────────────────────────────────
     
-    # Carica dataset
+    # Load dataset
     print("Loading dataset...")
     df = pd.read_csv(CSV_PATH)
     print(f"Dataset shape: {df.shape}")
     print(f"Original class distribution:\n{df['label'].value_counts().sort_index()}\n")
     
-    # Binary conversion se richiesto
+    # Binary conversion if requested
     if BINARY_STRATEGY is not None:
         print(f"\n{'='*70}")
         print(f"CONVERTING TO BINARY PROBLEM")
@@ -519,11 +527,14 @@ def main():
         n_classes = 3
         print("Using 3-class problem (original labels)\n")
     
-    # Carica features
+    # Load features
     loader = FeatureLoader(FEATURES_DIR, feature_key=FEATURE_KEY)
     features_dict = loader.load_all_slides(df['slide_id'].tolist())
     
-    # Test diversi metodi di aggregazione
+    # Extract features directory name for output subfolder
+    features_dir_name = Path(FEATURES_DIR).name
+    
+    # Test different aggregation methods
     all_results = {}
     
     for agg_method in AGGREGATION_METHODS:
@@ -531,7 +542,7 @@ def main():
         print(f"# AGGREGATION METHOD: {agg_method.upper()}")
         print(f"{'#'*70}")
         
-        # Aggrega features
+        # Aggregate features
         X = []
         y = []
         for _, row in df.iterrows():
@@ -550,21 +561,23 @@ def main():
         benchmark = BaselineClassifierBenchmark(
             normalize=NORMALIZE,
             use_pca=USE_PCA,
-            n_classes=n_classes
+            n_classes=n_classes,
+            output_dir=OUTPUT_DIR,
+            features_dir_name=features_dir_name
         )
         
         results = benchmark.evaluate(X, y, n_splits=N_SPLITS)
         all_results[agg_method] = results
         
-        # Plot per questo metodo
+        # Plot for this method
         suffix = f"_{BINARY_STRATEGY}" if BINARY_STRATEGY else "_3class"
         benchmark.plot_results(
             results, 
-            save_path=f'baseline_{agg_method}{suffix}.png'
+            save_name=f'baseline_{agg_method}{suffix}.png'
         )
     
     # ──────────────────────────────────────────────────────────────────────
-    # SUMMARY FINALE
+    # FINAL SUMMARY
     # ──────────────────────────────────────────────────────────────────────
     print(f"\n\n{'='*70}")
     print(f"FINAL SUMMARY - BEST CONFIGURATIONS ({n_classes}-CLASS)")
@@ -589,33 +602,33 @@ def main():
                 best_combo = (agg_method, clf_name)
     
     print(f"\n{'─'*70}")
-    print(f"🏆 BEST OVERALL:")
+    print(f"[BEST OVERALL]")
     print(f"   Aggregation: {best_combo[0]}")
     print(f"   Classifier:  {best_combo[1]}")
     print(f"   Balanced Accuracy: {best_score:.3f}")
     print(f"{'─'*70}\n")
     
-    # Interpretazione
-    print("\n📋 INTERPRETATION GUIDE:")
+    # Interpretation
+    print("\n[INTERPRETATION GUIDE]")
     print("─" * 70)
     
     threshold_good = 0.75 if n_classes == 2 else 0.65
     threshold_med = 0.65 if n_classes == 2 else 0.50
     
     if best_score > threshold_good:
-        print("✅ EXCELLENT: Features are highly discriminative!")
-        print("   → Problem likely in CLAM architecture/training")
-        print("   → Try: simpler aggregation, reduce overfitting, tune hyperparams")
+        print("[EXCELLENT] Features are highly discriminative!")
+        print("   -> Problem likely in CLAM architecture/training")
+        print("   -> Try: simpler aggregation, reduce overfitting, tune hyperparams")
     elif best_score > threshold_med:
-        print("⚠️  GOOD: Features capture signal but can be improved")
-        print("   → Try: different feature extractors, more augmentation")
-        print("   → Consider: ensemble methods, better preprocessing")
+        print("[GOOD] Features capture signal but can be improved")
+        print("   -> Try: different feature extractors, more augmentation")
+        print("   -> Consider: ensemble methods, better preprocessing")
     else:
-        print("❌ POOR: Features are not very discriminative")
-        print("   → Try: different backbone (ResNet → ViT/CTransPath/UNI)")
-        print("   → Check: tissue extraction, stain normalization")
+        print("[POOR] Features are not very discriminative")
+        print("   -> Try: different backbone (ResNet -> ViT/CTransPath/UNI)")
+        print("   -> Check: tissue extraction, stain normalization")
     
-    # Classe minoritaria check (solo per 3-class)
+    # Minority class check (only for 3-class)
     if n_classes == 3:
         for agg_method, results in all_results.items():
             for clf_name, metrics in results.items():
@@ -623,9 +636,9 @@ def main():
                 if cm.shape[0] == 3:
                     class2_recall = cm[2, 2] / cm[2].sum() if cm[2].sum() > 0 else 0
                     if class2_recall < 0.25:
-                        print(f"\n⚠️  Class 2 poorly predicted ({class2_recall:.2f} recall)")
-                        print("   → STRONGLY RECOMMEND: Convert to binary problem")
-                        print("   → Set BINARY_STRATEGY = 'class_2_vs_rest'")
+                        print(f"\n[WARNING] Class 2 poorly predicted ({class2_recall:.2f} recall)")
+                        print("   -> STRONGLY RECOMMEND: Convert to binary problem")
+                        print("   -> Set BINARY_STRATEGY = 'class_2_vs_rest'")
                         break
 
 
