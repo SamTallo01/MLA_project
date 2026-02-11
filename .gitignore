@@ -5,8 +5,9 @@
 __pycache__/
 
 # models checkpoints and data
-models/
 data/
+dataset/
+dataset_sample/
 
 # external repositories
 external/
@@ -14,4 +15,22 @@ external/
 # input and results
 patch_images/
 M-6.ndpi
-extracted_features/KimiaNet_NDPI_Features.pickle
+extracted_features/
+kimianet_features/
+resnet_features/
+resnet18_features/
+uni_features/
+patches/
+debug/
+features/
+checkpoints/
+manual_patch_level/
+manual_cell_level/
+manual_patch_level_filtered/
+geojson_patches/
+resnet_features_MLA/
+MLA_features_resnet50_merged/
+out/
+MLA_features_resnet50/
+MLA_features_uni/
+MLA_features_kimianet/
