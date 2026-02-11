@@ -399,6 +399,7 @@ def train_clam_cv(
     global_val_labels = []
     global_val_preds = []
     fold_best_f1 = []
+    fold_best_acc = []
     fold_best_val_loss = []
     fold_best_auc = []
     
@@ -477,6 +478,7 @@ def train_clam_cv(
 
         best_val_loss = float('inf')
         best_f1 = 0.0
+        best_acc = 0.0
         best_auc = 0.0
         best_epoch = 0
 
@@ -496,10 +498,11 @@ def train_clam_cv(
             if cv_mode == "kfold" and val_loss < best_val_loss:
                 best_val_loss = val_loss
                 best_f1 = val_f1
+                best_acc = val_acc
                 best_auc = val_auc
                 best_epoch = epoch
                 torch.save(model.state_dict(), os.path.join(fold_dir, "best_model.pt"))
-                print(f"[SAVED] New best model with Val Loss: {best_val_loss:.4f}, F1: {best_f1:.4f}, AUC: {best_auc:.4f}")
+                print(f"[SAVED] New best model with Val Loss: {best_val_loss:.4f}, Acc: {best_acc:.4f}, F1: {best_f1:.4f}, AUC: {best_auc:.4f}")
                 
                 # Save confusion matrix of the best model
                 save_confusion_matrix(
@@ -520,6 +523,7 @@ def train_clam_cv(
         # Confusion Matrix e PCA
         if cv_mode == "kfold":
             fold_best_f1.append(best_f1)
+            fold_best_acc.append(best_acc)
             fold_best_val_loss.append(best_val_loss)
             fold_best_auc.append(best_auc)
             
@@ -598,7 +602,7 @@ def train_clam_cv(
                 n_classes=n_classes
             )
             
-            print(f"\n[Fold {fold + 1}] Best Val Loss: {best_val_loss:.4f}, F1: {best_f1:.4f}, AUC: {best_auc:.4f} (Epoch {best_epoch})")
+            print(f"\n[Fold {fold + 1}] Best Val Loss: {best_val_loss:.4f}, Acc: {best_acc:.4f}, F1: {best_f1:.4f}, AUC: {best_auc:.4f} (Epoch {best_epoch})")
             
             # Salva le predizioni di questo fold per la confusion matrix globale
             all_folds_val_labels.extend(final_val_labels)
@@ -623,11 +627,11 @@ def train_clam_cv(
         summary_path = os.path.join(base_dir, "summary.csv")
         with open(summary_path, "w", newline="") as f:
             writer = csv.writer(f)
-            writer.writerow(["fold", "best_val_loss", "best_val_f1", "best_val_auc"])
+            writer.writerow(["fold", "best_val_loss", "best_val_acc", "best_val_f1", "best_val_auc"])
             for i in range(len(fold_best_f1)):
-                writer.writerow([i, fold_best_val_loss[i], fold_best_f1[i], fold_best_auc[i]])
-            writer.writerow(["mean", np.mean(fold_best_val_loss), np.mean(fold_best_f1), np.mean(fold_best_auc)])
-            writer.writerow(["std", np.std(fold_best_val_loss), np.std(fold_best_f1), np.std(fold_best_auc)])
+                writer.writerow([i, fold_best_val_loss[i], fold_best_acc[i], fold_best_f1[i], fold_best_auc[i]])
+            writer.writerow(["mean", np.mean(fold_best_val_loss), np.mean(fold_best_acc), np.mean(fold_best_f1), np.mean(fold_best_auc)])
+            writer.writerow(["std", np.std(fold_best_val_loss), np.std(fold_best_acc), np.std(fold_best_f1), np.std(fold_best_auc)])
         
 
         if len(all_folds_val_labels) > 0:
@@ -658,6 +662,7 @@ def train_clam_cv(
         print(f"SUMMARY - K-Fold CV")
         print(f"{'='*50}")
         print(f"Mean Val Loss: {np.mean(fold_best_val_loss):.4f} ± {np.std(fold_best_val_loss):.4f}")
+        print(f"Mean Accuracy: {np.mean(fold_best_acc):.4f} ± {np.std(fold_best_acc):.4f}")
         print(f"Mean F1: {np.mean(fold_best_f1):.4f} ± {np.std(fold_best_f1):.4f}")
         print(f"Mean AUC: {np.mean(fold_best_auc):.4f} ± {np.std(fold_best_auc):.4f}")
         print(f"Summary saved to: {summary_path}")
@@ -684,7 +689,7 @@ def train_clam_cv(
         print(f"\n{'='*50}")
         print(f"SUMMARY - Leave-One-Out CV")
         print(f"{'='*50}")
-        print(f"F1: {val_f1:.4f}, ACC: {val_acc:.4f}")
+        print(f"Accuracy: {val_acc:.4f}, F1: {val_f1:.4f}")
         print(f"Confusion matrix:\n{val_cm}")
         print(f"Summary saved to: {summary_path}")
 

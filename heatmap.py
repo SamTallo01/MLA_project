@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import openslide
 from models.clam import CLAM_SB, CLAM_MB
-from train import set_seed
+from train_CLAM import set_seed
 
 def generate_heatmap(wsi_path, features_path, checkpoint_path, output_path, model_type="clam_sb", embed_dim=1024, n_classes=3):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -82,12 +82,10 @@ def generate_heatmap(wsi_path, features_path, checkpoint_path, output_path, mode
     # Plot
     plt.figure(figsize=(15, 10))
     plt.subplot(1, 2, 1)
-    plt.imshow(thumb_np)
-    plt.title("WSI Thumbnail")
+
     plt.axis("off")
 
     plt.subplot(1, 2, 2)
-    plt.imshow(thumb_np)
     plt.imshow(overlay, cmap='jet', alpha=0.5)
     plt.title(f"Attention Heatmap (Pred: {pred_idx})")
     plt.colorbar(shrink=0.5)
@@ -109,11 +107,6 @@ if __name__ == "__main__":
     parser.add_argument("--embed-dim", type=int, default=1024)
     args = parser.parse_args()
 
-    # Need os.add_dll_directory for OpenSlide on Windows
-    try:
-        os.add_dll_directory("C:/openslide-bin-4.0.0.11-windows-x64/bin")
-    except AttributeError:
-        pass
 
     generate_heatmap(
         args.wsi_path,

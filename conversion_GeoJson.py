@@ -4,26 +4,19 @@ import os
 import glob
 from pathlib import Path
 
-# ==========================
-# Configura qui i percorsi
-# ==========================
-PATCHES_DIR = r"patches"             # cartella contenente tutti i file .h5
-OUTPUT_DIR = r"geojson_patches"      # cartella dove salvare i GeoJSON
-PATCH_SIZE = 512                      # dimensione delle patch
 
-# Crea la cartella di output se non esiste
+PATCHES_DIR = r"patches"   
+OUTPUT_DIR = r"geojson_patches"      
+PATCH_SIZE = 512                   
+
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-# Trova tutti i file .h5 nella cartella (anche nelle sottocartelle)
 h5_files = glob.glob(os.path.join(PATCHES_DIR, '**', '*.h5'), recursive=True)
 print(f"Found {len(h5_files)} .h5 files.")
 
-# ==========================
-# Processa ciascun file
-# ==========================
+
 for h5_path in h5_files:
     try:
-        # Nome base del file (senza "_patches" e senza estensione)
         filename = Path(h5_path).stem
         if filename.endswith('_patches'):
             filename = filename[:-8]
@@ -40,7 +33,7 @@ for h5_path in h5_files:
             coords = f['coords'][:]
 
             for i, (x, y) in enumerate(coords):
-                x, y = int(x), int(y)  # usa coordinate intere
+                x, y = int(x), int(y)
                 features.append({
                     "type": "Feature",
                     "geometry": {
@@ -64,7 +57,6 @@ for h5_path in h5_files:
             "features": features
         }
 
-        # Salva il GeoJSON
         with open(geojson_out, "w") as f:
             json.dump(geojson_data, f)
 
