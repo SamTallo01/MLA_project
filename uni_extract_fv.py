@@ -43,7 +43,8 @@ def extract_features_from_patches(
     os.makedirs(out_features_dir, exist_ok=True)
 
     wsi_dirs = [
-        d for d in os.listdir(patches_dir)
+        d
+        for d in os.listdir(patches_dir)
         if os.path.isdir(os.path.join(patches_dir, d))
     ]
 
@@ -68,7 +69,8 @@ def extract_features_from_patches(
 
         # Trova WSI associata
         wsi_candidates = [
-            f for f in os.listdir(wsi_dir)
+            f
+            for f in os.listdir(wsi_dir)
             if f.startswith(wsi_name)
             and f.lower().endswith((".svs", ".tif", ".tiff", ".ndpi"))
         ]
@@ -118,6 +120,7 @@ def extract_features_from_patches(
             f.create_dataset("features", data=features_array)
 
         print(f"[OK] Saved features for {wsi_name} → {out_h5}")
+
 
 if __name__ == "__main__":
     import argparse

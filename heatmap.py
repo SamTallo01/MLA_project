@@ -5,7 +5,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import openslide
 from models.clam import CLAM_SB, CLAM_MB
-from train_CLAM import set_seed
 
 def generate_heatmap(wsi_path, features_path, checkpoint_path, output_path, model_type="clam_sb", embed_dim=1024, n_classes=3):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

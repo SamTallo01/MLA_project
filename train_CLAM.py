@@ -109,7 +109,7 @@ def extract_slide_features(model, loader, device, binary_merge=False):
             label = torch.tensor([merged_label], dtype=torch.long).to(device)
             
             # Forward pass
-            logits, Y_prob, Y_hat, _, instance_dict = model(data, label=label, instance_eval=False)
+            _, _, Y_hat, _, _ = model(data, label=label, instance_eval=False)
             
             # Estrai feature dopo attention pooling
             with torch.no_grad():
@@ -212,7 +212,7 @@ def train_loop_clam(epoch, model, loader, optimizer, n_classes, bag_weight, loss
         label = torch.tensor([merged_label], dtype=torch.long).to(device)
         
         
-        logits, Y_prob, Y_hat, _, instance_dict = model(data, label=label, instance_eval=True)
+        logits, _, Y_hat, _, instance_dict = model(data, label=label, instance_eval=True)
         
         # Bag-level loss
         loss = loss_fn(logits, label)
