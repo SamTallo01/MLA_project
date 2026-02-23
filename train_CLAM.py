@@ -707,14 +707,14 @@ if __name__ == "__main__":
                        help="Feature dimension from feature extractor (default: 1024 for ResNet/ImageNet)")
     parser.add_argument("--epochs", type=int, default=20)
     parser.add_argument("--batch-size", type=int, default=1)
-    parser.add_argument("--lr", type=float, default=1e-4)
+    parser.add_argument("--lr", type=float, default=5e-6)
     parser.add_argument("--weight-decay", type=float, default=1e-5)
     parser.add_argument("--bag-weight", type=float, default=0.7, 
                        help="Weight for bag loss vs instance loss (default: 0.7)")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--save-dir", default="checkpoints")
     parser.add_argument("--cv", choices=["kfold", "loo"], default="kfold")
-    parser.add_argument("--n-splits", type=int, default=5)
+    parser.add_argument("--n-splits", type=int, default=4)
     parser.add_argument("--opt", choices=["adam", "sgd"], default="adam")
     parser.add_argument("--binary-merge", action="store_true", 
                        help="Merge classes 0 and 2 into class 0 (binary classification: 0 vs 1)")
