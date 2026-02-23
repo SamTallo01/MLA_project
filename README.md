@@ -43,6 +43,8 @@ pip install -r requirements.txt
 **Goal:** Extract tissue patches from WSI slides (if not already done).
 - **Script:** `create_patches.py`
 - **Output:** Patch files saved under `patches/`.
+![alt text](images/mask.png)
+
 
 ### Step 2: Feature Extraction
 **Goal:** Convert WSI patches into feature vectors.
@@ -88,3 +90,5 @@ pip install -r requirements.txt
 ### Step 8: Evaluation / Heatmap
 **Goal:** Evaluate a single WSI and generate a heatmap.
 - **Script:** `heatmap.py`
+
+![alt text](images/heatmap.png)
